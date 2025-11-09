@@ -1,0 +1,136 @@
+#cloud-config
+packages:
+  - git
+  - sdl
+  - openal
+  - unzip
+  - curl
+  - sudo
+  - glibc
+
+groups:
+  - utserver: [root]
+users:
+  - name: serv
+    groups: sudo, utserver
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+  - name: ut
+    groups: utserver
+    shell: /bin/bash
+    homedir: /srv/urbanterror
+
+write_files:
+  - content: |
+      #!/usr/bin/env bash
+      
+      chmod -R 0771 /srv/urbanterror
+      chown -R ut:utserver /srv/urbanterror
+
+      su ut
+      
+      cd /srv/urbanterror
+
+      curl -O https://davemedinatv-static.br-gru-1.linodeobjects.com/UrbanTerror434_full.zip
+
+      unzip UrbanTerror434_full.zip
+
+      mv UrbanTerror43/q3ut4 .
+      mv UrbanTerror43/Quake3-UrT-Ded.x86_64 urbanterror-server
+      mv custom-server.cfg q3ut4/
+      mv mapcycle.txt q3ut4/
+
+      rm -rf UrbanTerror43 UrbanTerror434_full.zip
+
+      chmod -R 774 .
+      chmod +x .
+      chmod 770 urbanterror-server run-server.sh install-ut.sh
+      chown -R ut:utserver .
+      
+
+    path: /srv/urbanterror/install-ut.sh
+    owner: ut:utserver
+    permissions: "0770"
+    defer: true
+
+  - content: |
+      #!/usr/bin/env bash
+      ./urbanterror-server +set fs_game q3ut4 +set fs_basepath /srv/urbanterror/ +set fs_homepath /srv/urbanterror/ +set dedicated 2 +set net_port 27960 +set com_hunkmegs 128 +exec server.cfg +exec custom-server.cfg
+      echo "server crashed on `date`" > last_crash.txt
+      exit 1
+    path: /srv/urbanterror/run-server.sh
+    owner: ut:utserver
+    permissions: "0770"
+    defer: true
+
+  - content: |
+      [Unit]
+      Description=Urban Terror Server
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=ut
+      Group=utserver
+      ExecStart=/bin/bash /srv/urbanterror/run-server.sh
+      Restart=on-failure
+      WorkingDirectory=/srv/urbanterror
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+    path: /etc/systemd/system/urbanterror.service
+    owner: root:root
+    permissions: "0660"
+
+  - content: |
+      set sv_hostname           "El Daveserver - davemedina.tv"
+      set sv_joinmessage        "Hola viteh"
+      set g_motd                "Salen unos tiritos?"
+      set sv_maxclients         "12"
+      set sv_privateclients     "1"                    // Private slots
+      set sv_clientsPerIp       "4"
+      set g_removeBodyTime      "30"
+      set g_antiwarptol         "70"
+      set timelimit             "10"
+      set g_maxteamkills        "2"
+      set g_nameRed             "Granujas"
+      set g_nameBlue            "Sabandijas"
+      set rconpassword          "" // Remote control password 
+      set sv_privatepassword    "" // Private slot password
+      set g_password            ""                     // server password, Default: empty = Public
+      set g_gametype            "11"
+    path: /srv/urbanterror/custom-server.cfg
+    owner: ut:utserver
+    permissions: "0660"
+    defer: true
+  - content: |
+      ut4_casa
+      ut4_turnpike
+      ut4_algiers
+      ut4_kingdom
+      ut4_uptown
+      ut4_sanc
+      ut4_abbey
+      ut4_thingley
+      ut4_subway
+      ut4_paris
+      ut4_riyadh
+    path: /srv/urbanterror/mapcycle.txt
+    owner: ut:utserver
+    permissions: "0664"
+    defer: true
+
+
+
+package_update: true
+package_upgrade: true
+disable_root: true
+ssh_quiet_keygen: true
+
+runcmd:
+  - /srv/urbanterror/install-ut.sh
+  - systemctl enable urbanterror.service
+  - systemctl start urbanterror.service

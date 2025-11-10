@@ -25,7 +25,9 @@ variable "state_volume_id" {
     default = null
 }
 
-variable "maintenance_public_ssh_key" {}
+variable "maintenance_public_ssh_keys" {
+    default = []
+}
 
 variable "server_rcon_password" {}
 variable "server_motd" {
@@ -48,4 +50,11 @@ variable "server_rcon_port" {
 }
 variable "server_port" {
     default = 25565
+}
+variable "setup_domain" {
+    default = false
+}
+variable "domain_id" {}
+variable "subdomain" {
+    default = "mc"
 }

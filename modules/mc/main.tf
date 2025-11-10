@@ -1,3 +1,10 @@
+locals {
+  node_ipv6 = split("/", linode_instance.minecraft_server.ipv6).0
+  node_ipv4 = slice([
+    for element in linode_instance.minecraft_server.ipv4 : element
+  ], 0, 1).0
+}
+
 resource "linode_firewall" "minecraft_firewall" {
   label = "minecraft_firewall"
 
@@ -44,7 +51,7 @@ resource "linode_instance" "minecraft_server" {
 
   metadata {
     user_data = base64encode(templatefile("${path.module}/cloud-config.yml", {
-      maintenance_public_ssh_key = var.maintenance_public_ssh_key
+      maintenance_public_ssh_keys = var.maintenance_public_ssh_keys
       rcon_password = var.server_rcon_password
       motd = var.server_motd
       gamemode = var.server_gamemode
@@ -70,4 +77,22 @@ resource "linode_instance_config" "minecraft_server_config" {
     device_name = "sdc"
     volume_id = var.state_volume_id
   }
+}
+
+resource "linode_domain_record" "mc_domain_record_A" {
+  count = var.setup_domain ? 1 : 0
+  domain_id = var.domain_id
+  target = local.node_ipv4
+  record_type = "A"
+  name = var.subdomain
+  ttl_sec = 900
+}
+
+resource "linode_domain_record" "mc_domain_record_AAAA" {
+  count = var.setup_domain ? 1 : 0
+  domain_id = var.domain_id
+  target = local.node_ipv6
+  record_type = "AAAA"
+  name = var.subdomain
+  ttl_sec = 900
 }

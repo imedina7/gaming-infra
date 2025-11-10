@@ -1,3 +1,10 @@
+locals {
+  node_ipv6 = split("/", linode_instance.ut-sarvar.ipv6).0
+  node_ipv4 = slice([
+    for element in linode_instance.ut-sarvar.ipv4 : element
+  ], 0, 1).0
+}
+
 resource "linode_firewall" "urt_firewall" {
   label = "urt_firewall"
 
@@ -38,6 +45,7 @@ resource "linode_instance" "ut-sarvar" {
   tags       = ["urt","gaming"]
   swap_size  = 1024
   private_ip = true
+
   metadata {
     user_data = base64encode(templatefile("${path.module}/cloud-config.yml", {
       host_name = var.server_host_name
@@ -62,7 +70,25 @@ resource "linode_instance" "ut-sarvar" {
       allowchat = var.server_allowchat
       deadchat = var.server_deadchat
       inactivity = var.server_inactivity
-      maintenance_public_ssh_key = var.maintenance_public_ssh_key
+      maintenance_public_ssh_keys = var.maintenance_public_ssh_keys
     }))
   }
+}
+
+resource "linode_domain_record" "urt_domain_record_A" {
+  count = var.setup_domain ? 1 : 0
+  domain_id = var.domain_id
+  target = local.node_ipv4
+  record_type = "A"
+  name = var.subdomain
+  ttl_sec = 900
+}
+
+resource "linode_domain_record" "urt_domain_record_AAAA" {
+  count = var.setup_domain ? 1 : 0
+  domain_id = var.domain_id
+  target = local.node_ipv6
+  record_type = "AAAA"
+  name = var.subdomain
+  ttl_sec = 900
 }

@@ -11,9 +11,11 @@ users:
   - name: serv
     groups: sudo, minecraft, systemd-journal
     sudo: "ALL=(ALL) NOPASSWD:ALL"
-%{if maintenance_public_ssh_key != ""}
+%{if length(maintenance_public_ssh_keys) > 0}
     ssh_authorized_keys:
-      - "${maintenance_public_ssh_key}"
+%{for key in maintenance_public_ssh_keys}
+      - "${key}"
+%{endfor}
 %{endif}
   - name: mc
     groups: minecraft

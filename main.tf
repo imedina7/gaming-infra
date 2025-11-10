@@ -16,7 +16,10 @@ module "urt_server" {
     server_password = var.urt_server_pass
     server_game_type = var.urt_game_type
     server_max_clients = var.urt_max_clients
-    maintenance_public_ssh_key = var.maintenance_public_key
+    maintenance_public_ssh_keys = var.maintenance_public_keys
+    domain_id = length(linode_domain.domain_name) > 0 ? linode_domain.domain_name[0].id : null
+    subdomain = var.urt_subdomain
+    setup_domain = var.primary_domain != null
 }
 
 module "mc_server" {
@@ -26,44 +29,16 @@ module "mc_server" {
     node_label = "minecraft-0"
     root_pass = var.root_pass
     linode_token = var.linode_token
-    maintenance_public_ssh_key = var.maintenance_public_key
+    maintenance_public_ssh_keys = var.maintenance_public_keys
     server_rcon_password = var.mc_rcon_pass
+    domain_id = length(linode_domain.domain_name) > 0 ? linode_domain.domain_name[0].id : null
+    subdomain = var.mc_subdomain
+    setup_domain = var.primary_domain != null
 }
 
-resource "linode_domain" "israelmedina_dev_domain" {
+resource "linode_domain" "domain_name" {
+  count = var.primary_domain == null ? 0 : 1
   domain = var.primary_domain
   type = "master"
   soa_email = var.soa_email
-}
-
-resource "linode_domain_record" "urt_domain_record_A" {
-  domain_id = linode_domain.israelmedina_dev_domain.id
-  target = module.urt_server.node_ipv4
-  record_type = "A"
-  name = "urt"
-  ttl_sec = 900
-}
-
-resource "linode_domain_record" "urt_domain_record_AAAA" {
-  domain_id = linode_domain.israelmedina_dev_domain.id
-  target = module.urt_server.node_ipv6
-  record_type = "AAAA"
-  name = "urt"
-  ttl_sec = 900
-}
-
-resource "linode_domain_record" "mc_domain_record_A" {
-  domain_id = linode_domain.israelmedina_dev_domain.id
-  target = module.mc_server.node_ipv4
-  record_type = "A"
-  name = "mc"
-  ttl_sec = 900
-}
-
-resource "linode_domain_record" "mc_domain_record_AAAA" {
-  domain_id = linode_domain.israelmedina_dev_domain.id
-  target = module.mc_server.node_ipv6
-  record_type = "AAAA"
-  name = "mc"
-  ttl_sec = 900
 }

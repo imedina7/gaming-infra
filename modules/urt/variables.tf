@@ -138,6 +138,16 @@ ut4_riyadh
 EOF
 }
 
-variable "maintenance_public_ssh_key" {
-  default = ""
+variable "maintenance_public_ssh_keys" {
+  default = []
+}
+
+variable "setup_domain" {
+  default = false
+}
+variable "domain_id" {
+  nullable = true
+}
+variable "subdomain" {
+    default = "urt"
 }

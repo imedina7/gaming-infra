@@ -8,6 +8,14 @@ variable "node_type" {
     default = "g6-standard-1"
 }
 
+variable "service_user" {
+  default = "mc"
+}
+
+variable "maintenance_user" {
+  default = "serv"
+}
+
 variable "region" {
     default = "br-gru"
 }

@@ -11,17 +11,13 @@ packages:
 groups:
   - utserver: [root]
 users:
-  - name: serv
-    groups: sudo, utserver
+  - name: ${maintenance_user}
+    groups: sudo, utserver, systemd-journal
     sudo: ALL=(ALL) NOPASSWD:ALL
-%{if length(maintenance_public_ssh_keys) > 0}
-    ssh_authorized_keys:
-%{for key in maintenance_public_ssh_keys}
-      - "${key}"
-%{endfor}
-%{endif}
-    shell: /bin/bash
-  - name: ut
+%{if length(maintenance_public_ssh_keys) > 0}    ssh_authorized_keys:
+%{for key in maintenance_public_ssh_keys}      - "${key}"
+%{endfor}%{endif}    shell: /bin/bash
+  - name: ${service_user}
     groups: utserver
     shell: /bin/bash
     homedir: /srv/urbanterror
@@ -132,7 +128,7 @@ write_files:
   - content: |
       PasswordAuthentication  no
       PermitRootLogin         no
-    path: /etc/ssh/ssh_config.d/99-custom.conf
+    path: /etc/ssh/sshd_config.d/99-custom.conf
     permissions: "0660"
     owner: root:root
 

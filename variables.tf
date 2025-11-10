@@ -1,3 +1,13 @@
+variable "region" {
+  default = "br-gru"
+  description = "Region where the instances are going to be deployed to"
+}
+variable "urt_maintenance_user" {
+  default = "serv"
+}
+variable "urt_service_user" {
+  default = "ut"
+}
 variable "urt_host_name" {
   default = "Test server"
 }
@@ -38,6 +48,13 @@ variable "linode_token" {
 
 variable "urt_subdomain" {
   default = "urt"
+}
+
+variable "mc_maintenance_user" {
+  default = "serv"
+}
+variable "mc_service_user" {
+  default = "mc"
 }
 
 variable "mc_subdomain" {

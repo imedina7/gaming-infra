@@ -48,6 +48,8 @@ resource "linode_instance" "ut-sarvar" {
 
   metadata {
     user_data = base64encode(templatefile("${path.module}/cloud-config.yml", {
+      service_user = var.service_user
+      maintenance_user = var.maintenance_user
       host_name = var.server_host_name
       join_message = var.server_join_message
       motd = var.server_motd

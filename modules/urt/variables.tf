@@ -13,6 +13,14 @@ variable "node_image" {
   default     = "linode/arch"
 }
 
+variable "service_user" {
+  default = "ut"
+}
+
+variable "maintenance_user" {
+  default = "serv"
+}
+
 variable "region" {
   description = "The default Linode region to deploy the infrastructure"
   default     = "br-gru"

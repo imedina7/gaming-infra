@@ -51,6 +51,8 @@ resource "linode_instance" "minecraft_server" {
 
   metadata {
     user_data = base64encode(templatefile("${path.module}/cloud-config.yml", {
+      maintenance_user = var.maintenance_user
+      service_user = var.service_user
       maintenance_public_ssh_keys = var.maintenance_public_ssh_keys
       rcon_password = var.server_rcon_password
       motd = var.server_motd

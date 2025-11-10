@@ -2,6 +2,7 @@ module "urt_server" {
     source = "./modules/urt"
 
     node_label = "urbanterror-0"
+    region = var.region
     root_pass = var.root_pass
     linode_token = var.linode_token
     
@@ -20,11 +21,14 @@ module "urt_server" {
     domain_id = length(linode_domain.domain_name) > 0 ? linode_domain.domain_name[0].id : null
     subdomain = var.urt_subdomain
     setup_domain = var.primary_domain != null
+    maintenance_user = var.urt_maintenance_user
+    service_user = var.urt_service_user
 }
 
 module "mc_server" {
     source = "./modules/mc"
 
+    region = var.region
     state_volume_id = var.mc_game_state_volume_id
     node_label = "minecraft-0"
     root_pass = var.root_pass
@@ -34,6 +38,8 @@ module "mc_server" {
     domain_id = length(linode_domain.domain_name) > 0 ? linode_domain.domain_name[0].id : null
     subdomain = var.mc_subdomain
     setup_domain = var.primary_domain != null
+    maintenance_user = var.mc_maintenance_user
+    service_user = var.mc_service_user
 }
 
 resource "linode_domain" "domain_name" {

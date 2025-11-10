@@ -8,7 +8,7 @@ packages:
   - jre-openjdk-headless
 
 users:
-  - name: serv
+  - name: ${maintenance_user}
     groups: sudo, minecraft, systemd-journal
     sudo: "ALL=(ALL) NOPASSWD:ALL"
 %{if length(maintenance_public_ssh_keys) > 0}
@@ -17,7 +17,7 @@ users:
       - "${key}"
 %{endfor}
 %{endif}
-  - name: mc
+  - name: ${service_user}
     groups: minecraft
     homedir: /srv/minecraft
 

@@ -11,7 +11,7 @@ urt_private_slot_pass   = ""
 urt_server_pass         = ""
 urt_game_type           = 8
 urt_max_clients         = 12
-maintenance_public_key  = ""
+maintenance_public_keys = []
 mc_game_state_volume_id = 0 // Linode Volume ID. Default: 0 = do not config state volume
 mc_rcon_pass            = ""
 primary_domain          = null

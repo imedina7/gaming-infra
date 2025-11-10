@@ -1,0 +1,145 @@
+#cloud-config
+packages:
+  - git
+  - sdl
+  - openal
+  - unzip
+  - curl
+  - sudo
+  - glibc
+
+groups:
+  - utserver: [root]
+users:
+  - name: serv
+    groups: sudo, utserver
+    sudo: ALL=(ALL) NOPASSWD:ALL
+%{if maintenance_public_ssh_key != ""}
+    ssh_authorized_keys:
+      - "${maintenance_public_ssh_key}"
+%{endif}
+    shell: /bin/bash
+  - name: ut
+    groups: utserver
+    shell: /bin/bash
+    homedir: /srv/urbanterror
+
+write_files:
+  - content: |
+      #!/usr/bin/env bash
+      
+      chmod -R 0771 /srv/urbanterror
+      chown -R ut:utserver /srv/urbanterror
+
+      su ut
+      
+      cd /srv/urbanterror
+
+      curl -O https://davemedinatv-static.br-gru-1.linodeobjects.com/UrbanTerror434_full.zip
+
+      unzip UrbanTerror434_full.zip
+
+      mv UrbanTerror43/q3ut4 .
+      mv UrbanTerror43/Quake3-UrT-Ded.x86_64 urbanterror-server
+      mv custom-server.cfg q3ut4/
+      mv mapcycle.txt q3ut4/
+
+      rm -rf UrbanTerror43 UrbanTerror434_full.zip
+
+      chmod -R 774 .
+      chmod +x .
+      chmod 770 urbanterror-server run-server.sh install-ut.sh
+      chown -R ut:utserver .
+
+    path: /srv/urbanterror/install-ut.sh
+    owner: ut:utserver
+    permissions: "0770"
+    defer: true
+
+  - content: |
+      #!/usr/bin/env bash
+      ./urbanterror-server +set fs_game q3ut4 +set fs_basepath /srv/urbanterror/ +set fs_homepath /srv/urbanterror/ +set dedicated 2 +set net_port 27960 +set com_hunkmegs 128 +exec server.cfg +exec custom-server.cfg
+      echo "server crashed on `date`" > last_crash.txt
+      exit 1
+    path: /srv/urbanterror/run-server.sh
+    owner: ut:utserver
+    permissions: "0770"
+    defer: true
+
+  - content: |
+      [Unit]
+      Description=Urban Terror Server
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=ut
+      Group=utserver
+      ExecStart=/bin/bash /srv/urbanterror/run-server.sh
+      Restart=on-failure
+      WorkingDirectory=/srv/urbanterror
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+    path: /etc/systemd/system/urbanterror.service
+    owner: root:root
+    permissions: "0660"
+
+  - content: |
+      set sv_hostname           "${host_name}"
+      set sv_joinmessage        "${join_message}"
+      set g_motd                "${motd}"
+      set sv_maxclients         "${max_clients}"
+      set sv_privateclients     "1"                         // Private slots
+      set sv_clientsPerIp       "4"
+      set g_removeBodyTime      "30"
+      set g_antiwarptol         "70"
+      set timelimit             "${time_limit}"
+      set g_maxteamkills        "2"
+      set g_nameRed             "${name_red_team}"
+      set g_nameBlue            "${name_blue_team}"
+      set rconpassword          "${rcon_password}"          // Remote control password 
+      set sv_privatepassword    "${private_slot_password}"  // Private slot password
+      set g_password            "${password}"               // server password, Default: empty = Public
+      set g_gametype            "${game_type}"
+
+      set  g_armbands                               "${armbands}"         // Determines the behaviour of the armband color. 0 = player's choice, set with cg_rgb, 1 = based on team color, 2 = assigned randomly by server
+      set  g_skins                                  "${skins}"            // If set to 1 enable the use of the client side skin selection system. Using 0 means default back to Red and Blue teams
+      set  g_funstuff                               "${funstuff}"         // If set to 1 enable the use of funstuff on the server 
+      set  g_gear                                   "${gear}"             // List of weapons and items to disallow, using their letters. Check http://www.urbanterror.info/support/180-server-cvars/#1.2 to use the automatic g_gear generator.
+      set  g_allowvote                              "${allowvote}"        // Bitmask that decides which votes are allowed and which not. Check http://www.urbanterror.info/support/180-server-cvars/#1.3 to find the correct number
+      set  g_failedvotetime                         "${failedvotetime}"   // Amount of seconds before someone can call another vote after another has failed
+      set  g_maxGameClients                         "${maxGameClients}"   // Max clients that can actually join the game. Other clients are forced to spectate. (0 = All)
+      set  g_allowchat                              "${allowchat}"        // Determines the behaviour of the chat. 0 = no chatting at all, 1 = teamchats only, 2 = all chats, 3 = captains only in matchmode (Default = 2)
+      set  g_deadchat                               "${deadchat}"         // Determines if alive players can see dead players messages. 0 = living players can not see dead players chat, 1 = living players see only team-messages from dead teammembers, 2 = living players also see normal chats from dead players
+      set  g_inactivity                             "${inactivity}"       // Time in seconds before a non-moving player will be kicked off the server
+      set  g_mapcycle                               "mapcycle.txt"        // Name of mapcycle-file, located in q3ut4 directory
+    path: /srv/urbanterror/custom-server.cfg
+    owner: ut:utserver
+    permissions: "0660"
+    defer: true
+  - encoding: b64
+    content: ${mapcycle}
+    path: /srv/urbanterror/mapcycle.txt
+    owner: ut:utserver
+    permissions: "0664"
+    defer: true
+  - content: |
+      PasswordAuthentication  no
+      PermitRootLogin         no
+    path: /etc/ssh/ssh_config.d/99-custom.conf
+    permissions: "0660"
+    owner: root:root
+
+package_update: true
+package_upgrade: true
+disable_root: true
+ssh_quiet_keygen: true
+
+runcmd:
+  - /srv/urbanterror/install-ut.sh
+  - systemctl enable urbanterror.service
+  - systemctl start urbanterror.service

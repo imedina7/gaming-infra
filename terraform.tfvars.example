@@ -1,0 +1,18 @@
+urt_host_name           = "Test server"
+urt_join_message        = "Hello"
+urt_motd                = "pew peww"
+urt_blue_team_name      = "Blue team"
+urt_red_team_name       = "Red team"
+urt_time_limit          = 15
+root_pass               = ""
+linode_token            = ""
+urt_rcon_pass           = ""
+urt_private_slot_pass   = ""
+urt_server_pass         = ""
+urt_game_type           = 8
+urt_max_clients         = 12
+maintenance_public_key  = ""
+mc_game_state_volume_id = 0 // Linode Volume ID. Default: 0 = do not config state volume
+mc_rcon_pass            = ""
+primary_domain          = ""
+soa_email               = ""
